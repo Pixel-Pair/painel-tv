@@ -150,7 +150,7 @@ footer{display:flex;align-items:stretch;height:6.6vh;margin:0 -2.6vw;background:
   <section class="card hero">
     <div class="hero-head">
       <div>
-        <div class="eyebrow">Câmbio em tempo real</div>
+        <div class="eyebrow">Mercado em tempo real</div>
         <div class="pair"><span class="badge" id="h-badge">USD</span><span class="nm" id="h-name">Dólar comercial</span></div>
       </div>
       <div class="tabs" id="tabs"></div>
@@ -168,7 +168,7 @@ footer{display:flex;align-items:stretch;height:6.6vh;margin:0 -2.6vw;background:
       </div>
     </div>
     <div class="chart" id="h-chart"></div>
-    <div class="hero-foot"><span>Fonte: AwesomeAPI · cotação de compra</span><div class="slide-bar"><i id="slide-bar"></i></div></div>
+    <div class="hero-foot"><span id="h-src">Fonte: AwesomeAPI · cotação de compra</span><div class="slide-bar"><i id="slide-bar"></i></div></div>
   </section>
 
   <section class="side">
@@ -194,9 +194,9 @@ footer{display:flex;align-items:stretch;height:6.6vh;margin:0 -2.6vw;background:
 const CONFIG = {
   empresa: "Pixel Pair",       // aparece se a logo não carregar
   logo: "logo.png",
-  destaque: ["USD-BRL", "EUR-BRL", "BTC-BRL"],          // alternam no gráfico grande
+  destaque: ["USD-BRL", "IBOV", "EUR-BRL", "BTC-BRL"],  // alternam no gráfico grande
   mercados: ["USD-BRL", "EUR-BRL", "GBP-BRL", "BTC-BRL"], // lista lateral (o Ibovespa entra no topo)
-  indicesLetreiro: ["IBOVESPA", "IFIX", "NASDAQ", "DOWJONES"],
+  indicesLetreiro: ["IBOVESPA", "IFIX", "SP500", "NASDAQ", "DOWJONES"],
   hgKey: "",                   // opcional: chave grátis da hgbrasil.com, se o limite sem chave apertar
   atualizaIndicesMin: 5,
   feeds: [
@@ -282,7 +282,7 @@ function bigChart(el, series){
 
 /* ---- cotações (AwesomeAPI) ---- */
 const API = "https://economia.awesomeapi.com.br/json";
-const ALL = [...new Set([...CONFIG.destaque, ...CONFIG.mercados])];
+const ALL = [...new Set([...CONFIG.destaque, ...CONFIG.mercados])].filter(c => c.includes("-"));
 let last = {}, hist = {}, heroIdx = 0;
 
 async function loadLast(){
@@ -308,11 +308,25 @@ function series(c){
 }
 
 /* ---- Ibovespa e índices (HG Brasil) ---- */
-const IDX_NAMES = {IBOVESPA:"IBOV", IFIX:"IFIX", NASDAQ:"NASDAQ", DOWJONES:"DOW", CAC:"CAC 40", NIKKEI:"NIKKEI"};
-let indices = {}, ibovDay = [];
+const IDX_NAMES = {IBOVESPA:"IBOV", IFIX:"IFIX", NASDAQ:"NASDAQ", DOWJONES:"DOW", SP500:"S&P 500", CAC:"CAC 40", NIKKEI:"NIKKEI"};
+let indices = {}, ibovDay = [], ibovMonth = [];
 const today = () => new Date().toDateString();
 try { const s = JSON.parse(localStorage.getItem("ibovDay")||"null"); if (s && s.d === today()) ibovDay = s.v; } catch(e){}
 async function loadIndices(){
+  // 1º: arquivo gerado pelo GitHub Actions (data/indices.json, com histórico)
+  try{
+    const r = await fetch("data/indices.json?_=" + Date.now(), {cache:"no-store"});
+    if (r.ok){
+      const j = await r.json();
+      indices = {};
+      for (const [k,v] of Object.entries(j.itens)) indices[k] = {points:v.pontos, variation:v.variacao, varPts:v.variacaoPts, low:v.minDia, high:v.maxDia};
+      const ib = j.itens.IBOVESPA;
+      if (ib){ if (ib.dia && ib.dia.length > 1) ibovDay = ib.dia; ibovMonth = ib.mes || []; }
+      renderMarkets(); renderHero(); buildTicker();
+      return;
+    }
+  }catch(e){}
+  // 2º (só funciona rodando no PC): HG Brasil
   try{
     const j = await (await fetch("https://api.hgbrasil.com/finance?format=json-cors" + (CONFIG.hgKey ? "&key=" + CONFIG.hgKey : ""))).json();
     if (!j.results || !j.results.stocks) return;
@@ -325,6 +339,29 @@ async function loadIndices(){
     }
     renderMarkets(); buildTicker();
   }catch(e){}
+}
+
+function renderHeroIbov(){
+  const i = indices.IBOVESPA; if (!i) return false;
+  const pts = +i.points, p = +i.variation, up = p >= 0;
+  $("h-badge").textContent = "B3";
+  $("h-name").textContent = "Ibovespa";
+  $("h-price").innerHTML = `${fmt(pts,0)}<small style="margin:0 0 0 .8vw">pts</small>`;
+  const chg = $("h-chg");
+  chg.className = "chg " + (up ? "up" : "down");
+  chg.innerHTML = `${up?"▲":"▼"} ${fmt(Math.abs(p),2)}%` + (i.varPts != null ? ` <span style="opacity:.75;font-weight:600">hoje (${up?"+":""}${fmt(+i.varPts,0)} pts)</span>` : "");
+  $("h-low").textContent = i.low ? fmt(+i.low,0) : "—";
+  $("h-high").textContent = i.high ? fmt(+i.high,0) : "—";
+  const s = ibovMonth.map(x => ({...x}));
+  if (s.length > 1){
+    s[s.length-1].v = pts;
+    const v = (pts/s[0].v - 1)*100;
+    $("h-max").textContent = fmt(Math.max(...s.map(x=>x.v)),0);
+    $("h-30").innerHTML = `<span class="${v>=0?"up":"down"}">${v>=0?"+":""}${fmt(v,2)}%</span>`;
+  } else { $("h-max").textContent = "—"; $("h-30").textContent = "—"; }
+  bigChart($("h-chart"), s);
+  $("h-src").textContent = "Fonte: Yahoo Finance · atualizado a cada ~10 min";
+  return true;
 }
 
 function ibovRow(){
@@ -354,6 +391,9 @@ function renderMarkets(){
 let slideAnim;
 function renderHero(){
   const c = CONFIG.destaque[heroIdx % CONFIG.destaque.length];
+  $("tabs").innerHTML = CONFIG.destaque.map((x,i) => `<span class="${i===heroIdx%CONFIG.destaque.length?"on":""}">${base(x)}</span>`).join("");
+  if (c === "IBOV"){ if (!renderHeroIbov()) { heroIdx++; renderHero(); } return; }
+  $("h-src").textContent = "Fonte: AwesomeAPI · cotação de compra";
   const q = last[key(c)]; if (!q) return;
   const b = base(c), bid = +q.bid, p = +q.pctChange, d = decFor(bid), up = p >= 0;
   $("h-badge").textContent = b;
