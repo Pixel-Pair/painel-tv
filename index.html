@@ -135,7 +135,7 @@ footer{display:flex;align-items:stretch;height:6.6vh;margin:0 -2.6vw;background:
 .tick .qs{display:flex;align-items:center;height:100%;background:rgba(77,110,242,.07);border-left:1px solid var(--border);border-right:1px solid var(--border);padding:0 1vw;margin-right:1.6vw}
 .status{position:fixed;left:50%;transform:translateX(-50%);bottom:7.5vh;font-size:1.4vh;color:var(--muted);background:var(--surface);border:1px solid var(--border);padding:.6vh 1vw;border-radius:99px;display:none}
 
-/* ============ VINHETA DA LOGO (a cada 10 min) ============ */
+/* ============ VINHETA DA LOGO (a cada 5 min) ============ */
 /* só transform/opacity: leve para o Chromecast */
 #intro{position:fixed;inset:0;z-index:100;display:none;place-items:center;overflow:hidden;
   background:radial-gradient(60vh 60vh at 50% 50%, rgba(77,110,242,.28), transparent 70%), #04060c}
@@ -632,8 +632,8 @@ async function checkUpdate(){
 setInterval(checkUpdate, 3*60*1000);
 setTimeout(() => reloadFresh(BUILD), 6*3600*1000); // evita acúmulo de memória ligado o dia todo
 
-/* ---- vinheta da logo: a cada 10 min (:00, :10, :20, :30, :40, :50) ---- */
-const VINHETA_MIN = 10, VINHETA_SEG = 8;
+/* ---- vinheta da logo: a cada 5 min (:00, :05, :10, ...) ---- */
+const VINHETA_MIN = 5, VINHETA_SEG = 8;
 function playIntro(){
   const el = $("intro");
   el.classList.remove("play"); void el.offsetWidth; // reinicia as animações
