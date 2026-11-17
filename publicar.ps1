@@ -23,8 +23,10 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # Pages publicado pelo GitHub Actions (necessario para o Ibovespa)
-gh api -X POST "repos/$user/painel-tv/pages" -f build_type=workflow 2>$null | Out-Null
-gh api -X PUT "repos/$user/painel-tv/pages" -f build_type=workflow 2>$null | Out-Null
+$ErrorActionPreference = "Continue"
+try { gh api -X POST "repos/$user/painel-tv/pages" -f build_type=workflow 2>&1 | Out-Null } catch { }
+try { gh api -X PUT "repos/$user/painel-tv/pages" -f build_type=workflow 2>&1 | Out-Null } catch { }
+$ErrorActionPreference = "Stop"
 
 git push -u origin main
 
