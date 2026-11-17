@@ -648,7 +648,10 @@ function scheduleIntro(){
   setTimeout(() => { playIntro(); scheduleIntro(); }, next - now);
 }
 scheduleIntro();
-if (/[?&]vinheta=1/.test(location.search)) setTimeout(playIntro, 1500); // ?vinheta=1 para testar
+if (/[?&]vinheta=1/.test(location.search)) { // ?vinheta=1 para testar: espera a página carregar e aparecer na TV
+  const testar = () => setTimeout(playIntro, 6000);
+  if (document.readyState === "complete") testar(); else addEventListener("load", testar);
+}
 </script>
 </body>
 </html>
