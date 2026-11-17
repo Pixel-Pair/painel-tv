@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pixel Pair · Painel</title>
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============ CORES DA MARCA ============ */
+:root{
+  --bg:#06080f;
+  --surface:#0d1220;
+  --surface-2:#121a2c;
+  --border:rgba(148,170,220,.12);
+  --text:#eef2fb;
+  --muted:#7f8aa6;
+  --faint:#4a5572;
+  --brand:#4d6ef2;
+  --brand-soft:rgba(77,110,242,.16);
+  --up:#2fd47a;
+  --down:#ff5a5f;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;cursor:none}
+body{
+  background:
+    radial-gradient(70vw 60vh at 0% 0%, rgba(77,110,242,.18), transparent 60%),
+    radial-gradient(50vw 50vh at 100% 100%, rgba(77,110,242,.10), transparent 60%),
+    var(--bg);
+  color:var(--text);font-family:Manrope,system-ui,sans-serif;
+  display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;
+  height:100vh;padding:3.2vh 2.6vw 0;gap:2.6vh;
+}
+/* grade sutil de fundo (estática, leve para o Chromecast) */
+body::before{content:"";position:fixed;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(148,170,220,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(148,170,220,.035) 1px,transparent 1px);
+  background-size:6vh 6vh;mask-image:linear-gradient(180deg,#000 0%,transparent 75%);-webkit-mask-image:linear-gradient(180deg,#000 0%,transparent 75%)}
+.num{font-family:"JetBrains Mono",monospace;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+
+/* ============ TOPO ============ */
+header{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;position:relative}
+.brand img{height:6.4vh;display:block}
+.brand .fallback{font-size:3.6vh;font-weight:800}
+.market{justify-self:center;display:flex;align-items:center;gap:1.4vw;padding:1vh 1.6vw;border:1px solid var(--border);border-radius:99px;background:rgba(13,18,32,.7);font-size:1.7vh;color:var(--muted);font-weight:600;letter-spacing:.04em}
+.market b{color:var(--text);font-weight:700}
+.pulse{width:1.1vh;height:1.1vh;border-radius:50%;background:var(--up);box-shadow:0 0 0 0 rgba(47,212,122,.6);animation:pulse 2s infinite}
+.pulse.off{background:var(--faint);animation:none}
+@keyframes pulse{70%{box-shadow:0 0 0 1.2vh rgba(47,212,122,0)}100%{box-shadow:0 0 0 0 rgba(47,212,122,0)}}
+.sep{width:1px;height:2vh;background:var(--border)}
+.clock{justify-self:end;text-align:right}
+.clock .time{font-size:6.6vh;font-weight:600;line-height:.95}
+.clock .time .s{color:var(--faint);font-size:3.2vh;margin-left:.3vw}
+.clock .date{font-size:1.8vh;color:var(--muted);margin-top:.8vh;font-weight:500}
+
+/* ============ MIOLO ============ */
+main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:1.8vw;min-height:0}
+.card{background:linear-gradient(180deg,rgba(18,26,44,.92),rgba(13,18,32,.92));border:1px solid var(--border);border-radius:2vh;position:relative;overflow:hidden;min-height:0}
+.eyebrow{font-size:1.45vh;color:var(--muted);text-transform:uppercase;letter-spacing:.18em;font-weight:700;display:flex;align-items:center;gap:.8vw}
+.eyebrow::before{content:"";width:.5vh;height:1.6vh;border-radius:1vh;background:var(--brand)}
+
+/* destaque */
+.hero{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;padding:3vh 2vw 2.4vh;gap:2vh}
+.hero-head{display:flex;justify-content:space-between;align-items:flex-start}
+.pair{display:flex;align-items:center;gap:1vw;margin-top:1.6vh}
+.badge{font-weight:800;font-size:1.8vh;padding:.7vh .9vw;border-radius:1vh;background:var(--brand-soft);color:#b9c8ff;letter-spacing:.06em}
+.pair .nm{font-size:2.6vh;font-weight:700}
+.tabs{display:flex;gap:.5vw;background:rgba(6,8,15,.5);border:1px solid var(--border);padding:.5vh;border-radius:1.2vh}
+.tabs span{font-size:1.6vh;font-weight:700;padding:.7vh 1vw;border-radius:.8vh;color:var(--muted);transition:.5s}
+.tabs span.on{background:var(--brand);color:#fff}
+.price-row{display:flex;align-items:flex-end;justify-content:space-between;gap:2vw}
+.price{font-size:11.5vh;font-weight:700;line-height:.9}
+.price small{font-size:4vh;color:var(--muted);font-weight:500;margin-right:.8vw;vertical-align:.5em}
+.chg{display:inline-flex;align-items:center;gap:.6vw;margin-top:1.8vh;font-size:2.4vh;font-weight:700;padding:.7vh 1.1vw;border-radius:1vh}
+.chg.up{color:var(--up);background:rgba(47,212,122,.12)}
+.chg.down{color:var(--down);background:rgba(255,90,95,.12)}
+.stats{flex:0 0 auto;display:grid;grid-template-columns:repeat(4,auto);gap:0;border:1px solid var(--border);border-radius:1.4vh;overflow:hidden}
+.stats div{padding:1.3vh 1vw;border-left:1px solid var(--border)}
+.stats div:first-child{border-left:0}
+.stats span{display:block;font-size:1.3vh;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-weight:700;margin-bottom:.6vh}
+.stats b{font-size:2.3vh;font-weight:600}
+.price-row > div:first-child{min-width:0}
+.qrow.idx .ic{background:var(--brand);color:#fff;border-color:transparent;font-size:1.5vh;letter-spacing:.02em}
+.chart{min-height:0;position:relative}
+.chart svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.hero-foot{display:flex;justify-content:space-between;align-items:center;font-size:1.4vh;color:var(--faint);font-weight:600}
+.slide-bar{height:.4vh;width:12vw;background:var(--border);border-radius:1vh;overflow:hidden}
+.slide-bar i{display:block;height:100%;width:0;background:var(--brand)}
+
+/* lateral */
+.side{display:grid;grid-template-rows:auto minmax(0,1fr);gap:1.8vh;min-height:0}
+.quotes{padding:2.4vh 1.6vw 1.2vh}
+.qrow{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:1.2vw;padding:1.3vh 0;border-top:1px solid var(--border)}
+.qrow:first-of-type{border-top:0;margin-top:1.4vh}
+.qrow .ic{width:4.4vh;height:4.4vh;border-radius:1.1vh;background:var(--surface-2);border:1px solid var(--border);display:grid;place-items:center;font-weight:800;font-size:2vh;color:#b9c8ff}
+.qrow .lb b{display:block;font-size:2vh;font-weight:700}
+.qrow .lb span{font-size:1.4vh;color:var(--muted);font-weight:500}
+.qrow svg{width:7vw;height:3.6vh;display:block}
+.qrow .vl{text-align:right;min-width:9vw}
+.qrow .vl b{display:block;font-size:2.4vh;font-weight:600}
+.qrow .vl span{font-size:1.5vh;font-weight:700}
+.up{color:var(--up)} .down{color:var(--down)}
+
+.news{display:grid}
+.news-slide{position:absolute;inset:0;opacity:0;transition:opacity 1.2s ease}
+.news-slide.on{opacity:1}
+.news-slide .img{position:absolute;inset:0;background:var(--surface-2) center/cover no-repeat;transform:scale(1.06);transition:transform 14s linear}
+.news-slide.on .img{transform:scale(1)}
+.news-slide::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,8,15,.15) 0%,rgba(6,8,15,.35) 35%,rgba(6,8,15,.96) 82%)}
+.news-top{position:absolute;top:2.4vh;left:1.6vw;right:1.6vw;z-index:2;display:flex;justify-content:space-between;align-items:center}
+.news-top .eyebrow{color:#dfe6f7}
+.count{font-size:1.4vh;color:#c7d0e6;font-weight:700;background:rgba(6,8,15,.55);padding:.5vh .8vw;border-radius:99px}
+.news-body{position:absolute;left:1.6vw;right:1.6vw;bottom:3vh;z-index:2}
+.src{display:inline-block;font-size:1.4vh;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--brand);padding:.5vh .8vw;border-radius:.6vh;margin-bottom:1.4vh}
+.src + .ago{font-size:1.5vh;color:#c7d0e6;margin-left:.8vw;font-weight:600}
+.news-body h2{font-size:3.1vh;line-height:1.22;font-weight:800;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;letter-spacing:-.01em}
+.news-progress{position:absolute;left:0;bottom:0;height:.45vh;width:0;background:var(--brand);z-index:3}
+
+/* ============ LETREIRO ============ */
+footer{display:flex;align-items:stretch;height:6.6vh;margin:0 -2.6vw;background:rgba(10,14,25,.95);border-top:1px solid var(--border)}
+.tick-label{display:flex;align-items:center;gap:.8vw;padding:0 1.8vw;background:var(--brand);color:#fff;font-weight:800;font-size:1.8vh;letter-spacing:.16em;white-space:nowrap}
+.tick-label::before{content:"";width:.9vh;height:.9vh;border-radius:50%;background:#fff;animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.25}}
+.tick-wrap{flex:1;min-width:0;overflow:hidden;position:relative;mask-image:linear-gradient(90deg,transparent,#000 3%,#000 97%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 3%,#000 97%,transparent)}
+.tick{position:absolute;left:0;top:0;height:100%;display:flex;align-items:center;white-space:nowrap;will-change:transform;font-size:2.3vh;font-weight:600}
+.tick .n{padding:0 1.6vw;color:#dfe6f7}
+.tick .n::after{content:"";display:inline-block;width:.7vh;height:.7vh;border-radius:50%;background:var(--brand);margin-left:3.2vw;vertical-align:middle}
+.tick .q{padding:0 1.4vw;font-family:"JetBrains Mono",monospace;font-size:2.1vh}
+.tick .q b{color:var(--text);margin-right:.6vw}
+.tick .qs{display:flex;align-items:center;height:100%;background:rgba(77,110,242,.07);border-left:1px solid var(--border);border-right:1px solid var(--border);padding:0 1vw;margin-right:1.6vw}
+.status{position:fixed;left:50%;transform:translateX(-50%);bottom:7.5vh;font-size:1.4vh;color:var(--muted);background:var(--surface);border:1px solid var(--border);padding:.6vh 1vw;border-radius:99px;display:none}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand" id="brand"><img id="logo" alt="Pixel Pair"></div>
+  <div class="market">
+    <i class="pulse" id="mk-dot"></i><span id="mk-text">—</span>
+    <i class="sep"></i><span>Atualizado <b id="updated" class="num">--:--</b></span>
+  </div>
+  <div class="clock">
+    <div class="time num"><span id="hm">--:--</span><span class="s" id="ss">00</span></div>
+    <div class="date" id="date"></div>
+  </div>
+</header>
+
+<main>
+  <section class="card hero">
+    <div class="hero-head">
+      <div>
+        <div class="eyebrow">Câmbio em tempo real</div>
+        <div class="pair"><span class="badge" id="h-badge">USD</span><span class="nm" id="h-name">Dólar comercial</span></div>
+      </div>
+      <div class="tabs" id="tabs"></div>
+    </div>
+    <div class="price-row">
+      <div>
+        <div class="price num" id="h-price"><small>R$</small>—</div>
+        <div class="chg" id="h-chg">—</div>
+      </div>
+      <div class="stats">
+        <div><span>Mín. dia</span><b class="num" id="h-low">—</b></div>
+        <div><span>Máx. dia</span><b class="num" id="h-high">—</b></div>
+        <div><span>Máx. 30d</span><b class="num" id="h-max">—</b></div>
+        <div><span>30 dias</span><b class="num" id="h-30">—</b></div>
+      </div>
+    </div>
+    <div class="chart" id="h-chart"></div>
+    <div class="hero-foot"><span>Fonte: AwesomeAPI · cotação de compra</span><div class="slide-bar"><i id="slide-bar"></i></div></div>
+  </section>
+
+  <section class="side">
+    <div class="card quotes">
+      <div class="eyebrow">Mercados</div>
+      <div id="quotes"></div>
+    </div>
+    <div class="card news" id="news">
+      <div class="news-top"><div class="eyebrow">Notícias</div><span class="count" id="news-count"></span></div>
+      <div class="news-progress" id="news-progress"></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="tick-label">AO VIVO</div>
+  <div class="tick-wrap"><div class="tick" id="tick"><span class="n">Carregando…</span></div></div>
+</footer>
+<div class="status" id="status"></div>
+
+<script>
+/* ============ CONFIGURAÇÃO ============ */
+const CONFIG = {
+  empresa: "Pixel Pair",       // aparece se a logo não carregar
+  logo: "logo.png",
+  destaque: ["USD-BRL", "EUR-BRL", "BTC-BRL"],          // alternam no gráfico grande
+  mercados: ["USD-BRL", "EUR-BRL", "GBP-BRL", "BTC-BRL"], // lista lateral (o Ibovespa entra no topo)
+  indicesLetreiro: ["IBOVESPA", "IFIX", "NASDAQ", "DOWJONES"],
+  hgKey: "",                   // opcional: chave grátis da hgbrasil.com, se o limite sem chave apertar
+  atualizaIndicesMin: 5,
+  feeds: [
+    "https://g1.globo.com/rss/g1/economia/",
+    "https://www.infomoney.com.br/feed/",
+    "https://g1.globo.com/rss/g1/tecnologia/",
+  ],
+  trocaDestaqueSeg: 20,
+  trocaNoticiaSeg: 12,
+  atualizaCotacaoSeg: 60,
+  atualizaNoticiasMin: 10,
+};
+/* ===================================== */
+
+const INFO = {
+  USD:{n:"Dólar comercial",s:"US$",i:"$"}, EUR:{n:"Euro",s:"€",i:"€"}, GBP:{n:"Libra esterlina",s:"£",i:"£"},
+  BTC:{n:"Bitcoin",s:"₿",i:"₿"}, ETH:{n:"Ethereum",s:"Ξ",i:"Ξ"}, JPY:{n:"Iene",s:"¥",i:"¥"}, ARS:{n:"Peso argentino",s:"$",i:"$"},
+};
+const $ = id => document.getElementById(id);
+const fmt = (v,d) => Number(v).toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d});
+const decFor = v => v >= 1000 ? 0 : v >= 100 ? 2 : 4;
+const base = c => c.split("-")[0];
+const key = c => c.replace("-","");
+const pad = n => String(n).padStart(2,"0");
+
+/* ---- marca ---- */
+const logo = $("logo");
+logo.src = CONFIG.logo;
+logo.onerror = () => { $("brand").innerHTML = `<div class="fallback">${CONFIG.empresa}</div>`; };
+
+/* ---- relógio + status do mercado (B3: seg–sex, 10h–17h) ---- */
+function clock(){
+  const d = new Date();
+  $("hm").textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  $("ss").textContent = pad(d.getSeconds());
+  const ds = d.toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  $("date").textContent = ds[0].toUpperCase() + ds.slice(1);
+  const wd = d.getDay(), m = d.getHours()*60 + d.getMinutes();
+  const open = wd > 0 && wd < 6 && m >= 600 && m < 1020;
+  $("mk-dot").className = "pulse" + (open ? "" : " off");
+  $("mk-text").innerHTML = open ? "<b>B3 aberta</b> · pregão em andamento" : "<b>B3 fechada</b> · fora do pregão";
+}
+clock(); setInterval(clock, 1000);
+
+/* ---- gráficos ---- */
+function spark(vals, color){
+  if (!vals || vals.length < 2) return "";
+  const W = 200, H = 60, min = Math.min(...vals), max = Math.max(...vals), sp = (max-min)||1;
+  const pts = vals.map((v,i) => `${(i*W/(vals.length-1)).toFixed(1)},${(4+(H-8)*(1-(v-min)/sp)).toFixed(1)}`).join(" ");
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+}
+function bigChart(el, series){
+  if (!series || series.length < 2){ el.innerHTML = ""; return; }
+  const W = el.clientWidth, H = el.clientHeight; if (!W || !H) return;
+  const vh = innerHeight/100, fs = 1.5*vh;
+  const vals = series.map(p => p.v), min = Math.min(...vals), max = Math.max(...vals), sp = (max-min)||1;
+  const padL = 0, padR = 7.5*fs, padT = fs, padB = 2.4*fs;
+  const x = i => padL + i*(W-padL-padR)/(series.length-1);
+  const y = v => padT + (H-padT-padB)*(1-(v-min)/sp);
+  const d = decFor(max);
+  let g = "";
+  for (let k=0;k<=4;k++){
+    const v = min + sp*k/4, yy = y(v).toFixed(1);
+    g += `<line x1="0" x2="${W-padR+fs}" y1="${yy}" y2="${yy}" stroke="rgba(148,170,220,.09)"/>`;
+    g += `<text x="${W-padR+1.8*fs}" y="${+yy+fs*.35}" fill="#7f8aa6" font-size="${fs}" font-family="JetBrains Mono" font-weight="500">${fmt(v,d)}</text>`;
+  }
+  [0, Math.floor((series.length-1)/2), series.length-1].forEach((i,k) => {
+    const t = new Date(series[i].t*1000).toLocaleDateString("pt-BR",{day:"2-digit",month:"short"}).replace(".","");
+    g += `<text x="${x(i)}" y="${H-.4*fs}" fill="#4a5572" font-size="${fs}" font-weight="700" text-anchor="${["start","middle","end"][k]}">${t}</text>`;
+  });
+  const pts = series.map((p,i) => `${x(i).toFixed(1)},${y(p.v).toFixed(1)}`).join(" ");
+  const lx = x(series.length-1), ly = y(vals.at(-1));
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}">
+    <defs><linearGradient id="hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4d6ef2" stop-opacity=".38"/><stop offset="1" stop-color="#4d6ef2" stop-opacity="0"/></linearGradient></defs>
+    ${g}
+    <polygon points="${x(0)},${H-padB} ${pts} ${lx},${H-padB}" fill="url(#hg)"/>
+    <polyline points="${pts}" fill="none" stroke="#7d95ff" stroke-width="${.32*vh}" stroke-linejoin="round" stroke-linecap="round"/>
+    <line x1="${lx}" x2="${W-padR+fs}" y1="${ly}" y2="${ly}" stroke="#7d95ff" stroke-dasharray="3 5" opacity=".6"/>
+    <circle cx="${lx}" cy="${ly}" r="${1.4*vh}" fill="#4d6ef2" opacity=".25"><animate attributeName="r" values="${.8*vh};${2.2*vh};${.8*vh}" dur="2.4s" repeatCount="indefinite"/></circle>
+    <circle cx="${lx}" cy="${ly}" r="${.7*vh}" fill="#fff" stroke="#4d6ef2" stroke-width="${.35*vh}"/>
+  </svg>`;
+}
+
+/* ---- cotações (AwesomeAPI) ---- */
+const API = "https://economia.awesomeapi.com.br/json";
+const ALL = [...new Set([...CONFIG.destaque, ...CONFIG.mercados])];
+let last = {}, hist = {}, heroIdx = 0;
+
+async function loadLast(){
+  const r = await fetch(`${API}/last/${ALL.join(",")}`);
+  if (!r.ok) throw new Error(r.status);
+  last = await r.json();
+  { const n = new Date(); $("updated").textContent = `${pad(n.getHours())}:${pad(n.getMinutes())}`; }
+}
+async function loadHist(){
+  for (const c of ALL){
+    try{
+      const r = await fetch(`${API}/daily/${c}/30`);
+      if (r.ok) hist[c] = (await r.json()).map(a => ({t:+a.timestamp, v:+a.bid})).reverse();
+    }catch(e){}
+    await new Promise(res => setTimeout(res, 400));
+  }
+}
+function series(c){
+  const h = (hist[c]||[]).map(p => ({...p}));
+  const q = last[key(c)];
+  if (q && h.length) h[h.length-1].v = +q.bid;
+  return h;
+}
+
+/* ---- Ibovespa e índices (HG Brasil) ---- */
+const IDX_NAMES = {IBOVESPA:"IBOV", IFIX:"IFIX", NASDAQ:"NASDAQ", DOWJONES:"DOW", CAC:"CAC 40", NIKKEI:"NIKKEI"};
+let indices = {}, ibovDay = [];
+const today = () => new Date().toDateString();
+try { const s = JSON.parse(localStorage.getItem("ibovDay")||"null"); if (s && s.d === today()) ibovDay = s.v; } catch(e){}
+async function loadIndices(){
+  try{
+    const j = await (await fetch("https://api.hgbrasil.com/finance?format=json-cors" + (CONFIG.hgKey ? "&key=" + CONFIG.hgKey : ""))).json();
+    if (!j.results || !j.results.stocks) return;
+    indices = j.results.stocks;
+    const pts = indices.IBOVESPA && +indices.IBOVESPA.points;
+    if (pts){
+      if (!ibovDay.length || ibovDay.at(-1) !== pts) ibovDay.push(pts);
+      ibovDay = ibovDay.slice(-120);
+      try { localStorage.setItem("ibovDay", JSON.stringify({d:today(), v:ibovDay})); } catch(e){}
+    }
+    renderMarkets(); buildTicker();
+  }catch(e){}
+}
+
+function ibovRow(){
+  const i = indices.IBOVESPA; if (!i) return "";
+  const p = +i.variation, up = p >= 0;
+  return `<div class="qrow idx">
+    <div class="ic">B3</div>
+    <div class="lb"><b>IBOV</b><span>Ibovespa · pontos</span></div>
+    ${spark(ibovDay, up ? "#2fd47a" : "#ff5a5f")}
+    <div class="vl"><b class="num">${fmt(+i.points,0)}</b><span class="${up?"up":"down"}">${up?"▲":"▼"} ${fmt(Math.abs(p),2)}%</span></div>
+  </div>`;
+}
+
+function renderMarkets(){
+  $("quotes").innerHTML = ibovRow() + CONFIG.mercados.map(c => {
+    const q = last[key(c)]; if (!q) return "";
+    const b = base(c), p = +q.pctChange, up = p >= 0, bid = +q.bid;
+    return `<div class="qrow">
+      <div class="ic">${(INFO[b]||{}).i||b[0]}</div>
+      <div class="lb"><b>${b}<span style="color:var(--faint)">/BRL</span></b><span>${(INFO[b]||{}).n||b}</span></div>
+      ${spark(series(c).map(p=>p.v), up ? "#2fd47a" : "#ff5a5f")}
+      <div class="vl"><b class="num">${fmt(bid, decFor(bid))}</b><span class="${up?"up":"down"}">${up?"▲":"▼"} ${fmt(Math.abs(p),2)}%</span></div>
+    </div>`;
+  }).join("");
+}
+
+let slideAnim;
+function renderHero(){
+  const c = CONFIG.destaque[heroIdx % CONFIG.destaque.length];
+  const q = last[key(c)]; if (!q) return;
+  const b = base(c), bid = +q.bid, p = +q.pctChange, d = decFor(bid), up = p >= 0;
+  $("h-badge").textContent = b;
+  $("h-name").textContent = (INFO[b]||{}).n || b;
+  $("h-price").innerHTML = `<small>R$</small>${fmt(bid,d)}`;
+  const chg = $("h-chg");
+  chg.className = "chg " + (up ? "up" : "down");
+  chg.innerHTML = `${up?"▲":"▼"} ${fmt(Math.abs(p),2)}% <span style="opacity:.75;font-weight:600">hoje (${up?"+":""}${fmt(+q.varBid,d)})</span>`;
+  $("h-low").textContent = fmt(+q.low,d);
+  $("h-high").textContent = fmt(+q.high,d);
+  const s = series(c);
+  if (s.length > 1){
+    const v = (s.at(-1).v/s[0].v - 1)*100;
+    $("h-max").textContent = fmt(Math.max(...s.map(p=>p.v)), d);
+    $("h-30").innerHTML = `<span class="${v>=0?"up":"down"}">${v>=0?"+":""}${fmt(v,2)}%</span>`;
+  }
+  bigChart($("h-chart"), s);
+  $("tabs").innerHTML = CONFIG.destaque.map((x,i) => `<span class="${i===heroIdx%CONFIG.destaque.length?"on":""}">${base(x)}</span>`).join("");
+}
+function nextHero(){
+  renderHero();
+  slideAnim?.cancel();
+  slideAnim = $("slide-bar").animate([{width:"0%"},{width:"100%"}],{duration:CONFIG.trocaDestaqueSeg*1000,fill:"forwards"});
+}
+
+function showStatus(t){ const s = $("status"); s.textContent = t; s.style.display = t ? "block" : "none"; }
+async function refreshQuotes(){
+  try{ await loadLast(); renderMarkets(); renderHero(); buildTicker(); showStatus(""); }
+  catch(e){ showStatus("Sem conexão com as cotações — tentando novamente"); }
+}
+
+/* ---- notícias (RSS) ---- */
+let news = [], newsIdx = 0;
+function imgFrom(h){ const m = /<img[^>]+src=["']([^"']+)/i.exec(h||""); return m ? m[1] : ""; }
+function clean(t){ const d = document.createElement("div"); d.innerHTML = t||""; return d.textContent.trim(); }
+async function fetchFeed(url){
+  try{
+    const j = await (await fetch("https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(url))).json();
+    if (j.status === "ok") return j.items.map(i => ({
+      title:i.title, date:new Date(i.pubDate.replace(" ","T")+"Z"),
+      img:i.thumbnail || (i.enclosure && i.enclosure.link) || imgFrom(i.description), src:j.feed.title }));
+  }catch(e){}
+  const xml = new DOMParser().parseFromString(await (await fetch("https://api.allorigins.win/raw?url=" + encodeURIComponent(url))).text(), "text/xml");
+  const src = xml.querySelector("channel > title")?.textContent || "";
+  return [...xml.querySelectorAll("item")].map(it => {
+    const m = it.getElementsByTagName("media:content")[0] || it.querySelector("enclosure");
+    return { title:it.querySelector("title")?.textContent, date:new Date(it.querySelector("pubDate")?.textContent),
+      img:m?.getAttribute("url") || imgFrom(it.querySelector("description")?.textContent), src };
+  });
+}
+function shortSrc(s){ s = clean(s); if (/infomoney/i.test(s)) return "InfoMoney"; const m = /g1\s*>\s*(.+)/i.exec(s); return m ? "g1 · " + m[1] : s.split(/[|>-]/)[0].trim(); }
+function ago(d){
+  const m = Math.round((Date.now()-d)/60000); if (!isFinite(m)) return "";
+  if (m < 60) return `há ${Math.max(m,1)} min`; if (m < 1440) return `há ${Math.round(m/60)} h`;
+  return d.toLocaleDateString("pt-BR");
+}
+async function refreshNews(){
+  const all = (await Promise.allSettled(CONFIG.feeds.map(fetchFeed)))
+    .flatMap(r => r.status === "fulfilled" ? r.value : []).filter(n => n.title)
+    .map(n => ({...n, title:clean(n.title), src:shortSrc(n.src)}));
+  if (!all.length) return;
+  const seen = new Set();
+  news = all.sort((a,b) => b.date-a.date).filter(n => !seen.has(n.title) && seen.add(n.title)).slice(0,30);
+  news.slice(0,8).forEach(n => { if (n.img) new Image().src = n.img; }); // pré-carrega
+  buildTicker();
+  if (!document.querySelector(".news-slide")) showNews();
+}
+function showNews(){
+  if (!news.length) return;
+  const i = newsIdx++ % news.length, n = news[i];
+  const box = $("news");
+  const el = document.createElement("div");
+  el.className = "news-slide";
+  el.innerHTML = `<div class="img" style="${n.img ? `background-image:url('${n.img.replace(/'/g,"%27")}')` : "background:linear-gradient(135deg,#1b2650,#0d1220)"}"></div>
+    <div class="news-body"><span class="src">${n.src}</span><span class="ago">${ago(n.date)}</span><h2>${n.title}</h2></div>`;
+  box.insertBefore(el, $("news-progress"));
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("on")));
+  [...box.querySelectorAll(".news-slide")].slice(0,-1).forEach(o => { o.classList.remove("on"); setTimeout(() => o.remove(), 1300); });
+  $("news-count").textContent = `${i+1} / ${news.length}`;
+  $("news-progress").animate([{width:"0%"},{width:"100%"}],{duration:CONFIG.trocaNoticiaSeg*1000,fill:"forwards"});
+  if (news[i+1]?.img) new Image().src = news[i+1].img;
+}
+
+/* ---- letreiro: cotações + manchetes ---- */
+let tickAnim, tickSig = "";
+function buildTicker(){
+  const is = CONFIG.indicesLetreiro.map(k => {
+    const i = indices[k]; if (!i) return "";
+    const p = +i.variation, up = p >= 0;
+    return `<span class="q"><b>${IDX_NAMES[k]||k}</b>${fmt(+i.points,0)} <span class="${up?"up":"down"}">${up?"▲":"▼"}${fmt(Math.abs(p),2)}%</span></span>`;
+  }).join("");
+  const qs = is + CONFIG.mercados.map(c => {
+    const q = last[key(c)]; if (!q) return "";
+    const p = +q.pctChange, up = p >= 0;
+    return `<span class="q"><b>${base(c)}</b>${fmt(+q.bid, decFor(+q.bid))} <span class="${up?"up":"down"}">${up?"▲":"▼"}${fmt(Math.abs(p),2)}%</span></span>`;
+  }).join("");
+  const ns = news.map(n => `<span class="n">${n.title}</span>`).join("");
+  const unit = `<span class="qs">${qs}</span>${ns}`;
+  if (unit === tickSig) return; tickSig = unit;
+  const t = $("tick");
+  t.innerHTML = unit + unit;
+  requestAnimationFrame(() => {
+    const w = t.scrollWidth/2;
+    tickAnim?.cancel();
+    tickAnim = t.animate([{transform:"translate3d(0,0,0)"},{transform:`translate3d(-${w}px,0,0)`}],
+      {duration: w/(innerWidth*0.055)*1000, iterations: Infinity});
+  });
+}
+
+/* ---- início ---- */
+(async () => {
+  await refreshQuotes(); nextHero();
+  loadIndices();
+  refreshNews();
+  await loadHist(); renderMarkets(); renderHero();
+})();
+setInterval(refreshQuotes, CONFIG.atualizaCotacaoSeg*1000);
+setInterval(async () => { await loadHist(); renderMarkets(); renderHero(); }, 30*60*1000);
+setInterval(refreshNews, CONFIG.atualizaNoticiasMin*60*1000);
+setInterval(loadIndices, CONFIG.atualizaIndicesMin*60*1000);
+setInterval(() => { heroIdx++; nextHero(); }, CONFIG.trocaDestaqueSeg*1000);
+setInterval(showNews, CONFIG.trocaNoticiaSeg*1000);
+addEventListener("resize", renderHero);
+setTimeout(() => location.reload(), 6*3600*1000); // evita acúmulo de memória ligado o dia todo
+</script>
+</body>
+</html>
