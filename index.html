@@ -193,6 +193,11 @@ footer{display:flex;align-items:stretch;height:6.6vh;margin:0 -2.6vw;background:
 <div class="status" id="status"></div>
 
 <script>
+/* ---- compatibilidade com o navegador antigo do Chromecast ---- */
+if (!Array.prototype.at) Array.prototype.at = function(i){ i = Math.trunc(i) || 0; if (i < 0) i += this.length; return this[i]; };
+if (!Promise.allSettled) Promise.allSettled = ps => Promise.all(ps.map(p => Promise.resolve(p).then(value => ({status:"fulfilled", value}), reason => ({status:"rejected", reason}))));
+if (!Element.prototype.animate) Element.prototype.animate = function(){ return {cancel(){}, set onfinish(f){ setTimeout(f, 60000); }}; };
+
 /* ============ CONFIGURAÇÃO ============ */
 const CONFIG = {
   empresa: "Pixel Pair",       // aparece se a logo não carregar
@@ -253,7 +258,8 @@ function spark(vals, color){
 }
 function bigChart(el, series){
   if (!series || series.length < 2){ el.innerHTML = ""; return; }
-  const W = el.clientWidth, H = el.clientHeight; if (!W || !H) return;
+  const W = el.clientWidth, H = el.clientHeight;
+  if (!W || !H){ clearTimeout(el._retry); el._retry = setTimeout(() => bigChart(el, series), 700); return; }
   const vh = innerHeight/100, fs = 1.5*vh;
   const vals = series.map(p => p.v), min = Math.min(...vals), max = Math.max(...vals), sp = (max-min)||1;
   const padL = 0, padR = 7.5*fs, padT = fs, padB = 2.4*fs;
@@ -361,7 +367,7 @@ function renderHeroIbov(){
     const v = (pts/s[0].v - 1)*100;
     $("h-max").textContent = fmt(Math.max(...s.map(x=>x.v)),0);
   } else { $("h-max").textContent = "—"; }
-  bigChart($("h-chart"), s);
+  try { bigChart($("h-chart"), s); } catch(e){ console.error("grafico", e); }
   $("h-src").textContent = "Fonte: Yahoo Finance · atualizado a cada ~10 min";
   return true;
 }
@@ -411,7 +417,7 @@ function renderHero(){
     const v = (s.at(-1).v/s[0].v - 1)*100;
     $("h-max").textContent = fmt(Math.max(...s.map(p=>p.v)), d);
   }
-  bigChart($("h-chart"), s);
+  try { bigChart($("h-chart"), s); } catch(e){ console.error("grafico", e); }
   $("tabs").innerHTML = CONFIG.destaque.map((x,i) => `<span class="${i===heroIdx%CONFIG.destaque.length?"on":""}">${base(x)}</span>`).join("");
 }
 let newsBarAnim;
