@@ -33,8 +33,11 @@ jobs:
 
       - name: Montar site
         run: |
-          mkdir -p _site
+          mkdir -p _site/data
           cp index.html logo.png _site/
+          v="${GITHUB_SHA::8}"
+          sed -i "s/__BUILD__/$v/" _site/index.html
+          echo "$v" > _site/data/versao.txt
 
       - name: Buscar Ibovespa e índices
         continue-on-error: true

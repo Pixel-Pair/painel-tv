@@ -542,7 +542,22 @@ setInterval(loadIndices, CONFIG.atualizaIndicesMin*60*1000);
 setInterval(() => { heroIdx++; nextHero(); }, CONFIG.trocaDestaqueSeg*1000);
 setInterval(showNews, CONFIG.trocaNoticiaSeg*1000);
 addEventListener("resize", renderHero);
-setTimeout(() => location.reload(), 6*3600*1000); // evita acúmulo de memória ligado o dia todo
+/* ---- atualização automática ----
+   O GitHub troca __BUILD__ pela versão publicada e grava data/versao.txt.
+   A cada 3 min o painel confere; se mudou, recarrega sozinho (furando o cache). */
+const BUILD = "__BUILD__";
+function reloadFresh(v){ location.replace(location.pathname + "?v=" + (v || Date.now())); }
+async function checkUpdate(){
+  if (BUILD.indexOf("__") === 0) return; // rodando local, sem versão
+  try{
+    const r = await fetch("data/versao.txt?_=" + Date.now(), {cache:"no-store"});
+    if (!r.ok) return;
+    const v = (await r.text()).trim();
+    if (v && v !== BUILD) reloadFresh(v);
+  }catch(e){}
+}
+setInterval(checkUpdate, 3*60*1000);
+setTimeout(() => reloadFresh(BUILD), 6*3600*1000); // evita acúmulo de memória ligado o dia todo
 </script>
 </body>
 </html>
