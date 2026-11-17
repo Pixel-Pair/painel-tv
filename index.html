@@ -75,7 +75,7 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:1.8vw;
 .chg{display:inline-flex;align-items:center;gap:.6vw;margin-top:1.8vh;font-size:2.4vh;font-weight:700;padding:.7vh 1.1vw;border-radius:1vh}
 .chg.up{color:var(--up);background:rgba(47,212,122,.12)}
 .chg.down{color:var(--down);background:rgba(255,90,95,.12)}
-.stats{flex:0 0 auto;display:grid;grid-template-columns:repeat(4,auto);gap:0;border:1px solid var(--border);border-radius:1.4vh;overflow:hidden}
+.stats{flex:0 0 auto;display:grid;grid-template-columns:repeat(3,auto);gap:0;border:1px solid var(--border);border-radius:1.4vh;overflow:hidden}
 .stats div{padding:1.3vh 1vw;border-left:1px solid var(--border)}
 .stats div:first-child{border-left:0}
 .stats span{display:block;font-size:1.3vh;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-weight:700;margin-bottom:.6vh}
@@ -120,7 +120,7 @@ main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:1.8vw;
 /* ============ LETREIRO ============ */
 footer{display:flex;align-items:stretch;height:6.6vh;margin:0 -2.6vw;background:rgba(10,14,25,.95);border-top:1px solid var(--border)}
 .tick-label{display:flex;align-items:center;gap:.8vw;padding:0 1.8vw;background:var(--brand);color:#fff;font-weight:800;font-size:1.8vh;letter-spacing:.16em;white-space:nowrap}
-.tick-label::before{content:"";width:.9vh;height:.9vh;border-radius:50%;background:#fff;animation:blink 1.4s infinite}
+.tick-label::before{content:"";width:1.1vh;height:1.1vh;border-radius:50%;background:#ff2d2d;box-shadow:0 0 .8vh rgba(255,45,45,.9);animation:blink 1.4s infinite}
 @keyframes blink{50%{opacity:.25}}
 .tick-wrap{flex:1;min-width:0;overflow:hidden;position:relative;mask-image:linear-gradient(90deg,transparent,#000 3%,#000 97%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 3%,#000 97%,transparent)}
 .tick{position:absolute;left:0;top:0;height:100%;display:flex;align-items:center;white-space:nowrap;will-change:transform;font-size:2.3vh;font-weight:600}
@@ -164,7 +164,6 @@ footer{display:flex;align-items:stretch;height:6.6vh;margin:0 -2.6vw;background:
         <div><span>Mín. dia</span><b class="num" id="h-low">—</b></div>
         <div><span>Máx. dia</span><b class="num" id="h-high">—</b></div>
         <div><span>Máx. 30d</span><b class="num" id="h-max">—</b></div>
-        <div><span>30 dias</span><b class="num" id="h-30">—</b></div>
       </div>
     </div>
     <div class="chart" id="h-chart"></div>
@@ -357,8 +356,7 @@ function renderHeroIbov(){
     s[s.length-1].v = pts;
     const v = (pts/s[0].v - 1)*100;
     $("h-max").textContent = fmt(Math.max(...s.map(x=>x.v)),0);
-    $("h-30").innerHTML = `<span class="${v>=0?"up":"down"}">${v>=0?"+":""}${fmt(v,2)}%</span>`;
-  } else { $("h-max").textContent = "—"; $("h-30").textContent = "—"; }
+  } else { $("h-max").textContent = "—"; }
   bigChart($("h-chart"), s);
   $("h-src").textContent = "Fonte: Yahoo Finance · atualizado a cada ~10 min";
   return true;
@@ -408,7 +406,6 @@ function renderHero(){
   if (s.length > 1){
     const v = (s.at(-1).v/s[0].v - 1)*100;
     $("h-max").textContent = fmt(Math.max(...s.map(p=>p.v)), d);
-    $("h-30").innerHTML = `<span class="${v>=0?"up":"down"}">${v>=0?"+":""}${fmt(v,2)}%</span>`;
   }
   bigChart($("h-chart"), s);
   $("tabs").innerHTML = CONFIG.destaque.map((x,i) => `<span class="${i===heroIdx%CONFIG.destaque.length?"on":""}">${base(x)}</span>`).join("");
