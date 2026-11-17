@@ -248,7 +248,7 @@ const CONFIG = {
   mercados: ["USD-BRL", "EUR-BRL"],          // lista lateral (o Ibovespa entra no topo)
   indicesLetreiro: ["IBOVESPA", "IFIX", "SP500", "NASDAQ", "DOWJONES"],
   hgKey: "",                   // opcional: chave grátis da hgbrasil.com, se o limite sem chave apertar
-  atualizaIndicesMin: 5,
+  atualizaIndicesMin: 2,
   feeds: [
     "https://g1.globo.com/rss/g1/economia/",
     "https://www.infomoney.com.br/feed/",
@@ -363,6 +363,28 @@ const IDX_NAMES = {IBOVESPA:"IBOV", IFIX:"IFIX", NASDAQ:"NASDAQ", DOWJONES:"DOW"
 let indices = {}, ibovDay = [], ibovMonth = [];
 const today = () => new Date().toDateString();
 try { const s = JSON.parse(localStorage.getItem("ibovDay")||"null"); if (s && s.d === today()) ibovDay = s.v; } catch(e){}
+/* Ibovespa e IFIX ao vivo direto da API oficial da B3 (libera acesso pelo navegador) */
+const B3 = "https://cotacao.b3.com.br/mds/api/v1/";
+async function loadB3(){
+  for (const [nome, sym] of [["IBOVESPA","IBOV"], ["IFIX","IFIX"]]){
+    try{
+      const j = await (await fetch(B3 + "instrumentQuotation/" + sym, {cache:"no-store"})).json();
+      const q = j.Trad && j.Trad[0] && j.Trad[0].scty && j.Trad[0].scty.SctyQtn;
+      if (!q || !q.curPrc) continue;
+      const anterior = q.curPrc / (1 + q.prcFlcn/100);
+      indices[nome] = {points:q.curPrc, variation:q.prcFlcn, varPts:q.curPrc - anterior, low:q.minPric, high:q.maxPric};
+    }catch(e){}
+  }
+  try{ // gráfico do dia do Ibovespa (pontos a cada 30s -> ~80 pontos)
+    const j = await (await fetch(B3 + "DailyFluctuationHistory/IBOV", {cache:"no-store"})).json();
+    const l = (j.TradgFlr && j.TradgFlr.scty && j.TradgFlr.scty.lstQtn) || [];
+    if (l.length > 1){
+      const passo = Math.max(1, Math.ceil(l.length / 80));
+      ibovDay = l.filter((_, i) => i % passo === 0 || i === l.length - 1).map(p => p.closPric);
+    }
+  }catch(e){}
+}
+
 async function loadIndices(){
   // 1º: arquivo gerado pelo GitHub Actions (data/indices.json, com histórico)
   try{
@@ -373,6 +395,7 @@ async function loadIndices(){
       for (const [k,v] of Object.entries(j.itens)) indices[k] = {points:v.pontos, variation:v.variacao, varPts:v.variacaoPts, low:v.minDia, high:v.maxDia};
       const ib = j.itens.IBOVESPA;
       if (ib){ if (ib.dia && ib.dia.length > 1) ibovDay = ib.dia; ibovMonth = ib.mes || []; }
+      await loadB3();   // valor ao vivo da B3 por cima do arquivo
       renderMarkets(); renderHero(); buildTicker();
       return;
     }
@@ -405,12 +428,14 @@ function renderHeroIbov(){
   $("h-high").textContent = i.high ? fmt(+i.high,0) : "—";
   const s = ibovMonth.map(x => ({...x}));
   if (s.length > 1){
-    s[s.length-1].v = pts;
+    // último ponto = hoje (se o histórico for de dias atrás, acrescenta o dia de hoje)
+    if (new Date(s[s.length-1].t*1000).toDateString() === new Date().toDateString()) s[s.length-1].v = pts;
+    else s.push({t: Math.floor(Date.now()/1000), v: pts});
     const v = (pts/s[0].v - 1)*100;
     $("h-max").textContent = fmt(Math.max(...s.map(x=>x.v)),0);
   } else { $("h-max").textContent = "—"; }
   try { bigChart($("h-chart"), s); } catch(e){ console.error("grafico", e); }
-  $("h-src").textContent = "Fonte: Yahoo Finance · atualizado a cada ~10 min";
+  $("h-src").textContent = "Fonte: B3 · atualizado a cada 2 min";
   return true;
 }
 
