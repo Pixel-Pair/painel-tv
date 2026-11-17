@@ -427,6 +427,21 @@ async function refreshQuotes(){
 
 /* ---- notícias (RSS) ---- */
 let news = [], newsIdx = 0;
+// Imagens em alta: remove o "miniatura" do InfoMoney/WordPress e padroniza em 1280x720
+// pelo images.weserv.nl (também evita fotos gigantes de 6000px que pesam no Chromecast).
+function hiRes(u){
+  if (!u) return "";
+  u = u.replace(/&amp;/g, "&");
+  if (/\/wp-content\/uploads\//.test(u)) u = u.split("?")[0].replace(/-\d+x\d+(\.\w+)$/, "$1");
+  return "https://images.weserv.nl/?url=" + encodeURIComponent(u) + "&w=1280&h=720&fit=cover&q=82&output=jpg";
+}
+function origOf(u){ const m = /[?&]url=([^&]+)/.exec(u||""); return m ? decodeURIComponent(m[1]) : u; }
+function prep(n){
+  if (!n || !n.img || n.prepped) return; n.prepped = true;
+  const i = new Image();
+  i.onerror = () => { n.img = origOf(n.img); }; // se o redimensionador falhar, usa a original
+  i.src = n.img;
+}
 function imgFrom(h){ const m = /<img[^>]+src=["']([^"']+)/i.exec(h||""); return m ? m[1] : ""; }
 function clean(t){ const d = document.createElement("div"); d.innerHTML = t||""; return d.textContent.trim(); }
 async function fetchFeed(url){
@@ -453,11 +468,11 @@ function ago(d){
 async function refreshNews(){
   const all = (await Promise.allSettled(CONFIG.feeds.map(fetchFeed)))
     .flatMap(r => r.status === "fulfilled" ? r.value : []).filter(n => n.title)
-    .map(n => ({...n, title:clean(n.title), src:shortSrc(n.src)}));
+    .map(n => ({...n, title:clean(n.title), src:shortSrc(n.src), img:hiRes(n.img)}));
   if (!all.length) return;
   const seen = new Set();
   news = all.sort((a,b) => b.date-a.date).filter(n => !seen.has(n.title) && seen.add(n.title)).slice(0,30);
-  news.slice(0,8).forEach(n => { if (n.img) new Image().src = n.img; }); // pré-carrega
+  news.slice(0,3).forEach(prep); // pré-carrega as primeiras
   buildTicker();
   if (!document.querySelector(".news-slide")) showNews();
 }
@@ -474,7 +489,7 @@ function showNews(){
   [...box.querySelectorAll(".news-slide")].slice(0,-1).forEach(o => { o.classList.remove("on"); setTimeout(() => o.remove(), 1300); });
   $("news-count").textContent = `${i+1} / ${news.length}`;
   $("news-progress").animate([{width:"0%"},{width:"100%"}],{duration:CONFIG.trocaNoticiaSeg*1000,fill:"forwards"});
-  if (news[i+1]?.img) new Image().src = news[i+1].img;
+  prep(news[(i+1) % news.length]); prep(news[(i+2) % news.length]);
 }
 
 /* ---- letreiro: cotações + manchetes ---- */
