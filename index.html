@@ -134,6 +134,35 @@ footer{display:flex;align-items:stretch;height:6.6vh;margin:0 -2.6vw;background:
 .tick .q b{color:var(--text);margin-right:.6vw}
 .tick .qs{display:flex;align-items:center;height:100%;background:rgba(77,110,242,.07);border-left:1px solid var(--border);border-right:1px solid var(--border);padding:0 1vw;margin-right:1.6vw}
 .status{position:fixed;left:50%;transform:translateX(-50%);bottom:7.5vh;font-size:1.4vh;color:var(--muted);background:var(--surface);border:1px solid var(--border);padding:.6vh 1vw;border-radius:99px;display:none}
+
+/* ============ VINHETA DA LOGO (a cada 15 min) ============ */
+/* só transform/opacity: leve para o Chromecast */
+#intro{position:fixed;inset:0;z-index:100;display:none;place-items:center;overflow:hidden;
+  background:radial-gradient(60vh 60vh at 50% 50%, rgba(77,110,242,.28), transparent 70%), #04060c}
+#intro.play{display:grid;animation:introFade 8s ease forwards}
+#intro .stage{position:relative;display:grid;place-items:center}
+#intro .ring{position:absolute;left:50%;top:50%;width:40vh;height:40vh;margin:-20vh 0 0 -20vh;border-radius:50%;border:.3vh solid var(--brand);opacity:0;will-change:transform,opacity}
+#intro.play .ring{animation:introRing 3.2s cubic-bezier(.2,.7,.2,1) forwards}
+#intro.play .ring.r2{animation-delay:.35s}
+#intro.play .ring.r3{animation-delay:.7s}
+#intro .logo-wrap{position:relative;opacity:0;will-change:transform,opacity}
+#intro.play .logo-wrap{animation:introLogo 8s cubic-bezier(.16,1,.3,1) forwards}
+#intro .logo-wrap img{display:block;height:22vh}
+#intro .shine{position:absolute;inset:0;overflow:hidden;-webkit-mask:url(logo.png) center/contain no-repeat;mask:url(logo.png) center/contain no-repeat}
+#intro .shine::before{content:"";position:absolute;top:-20%;bottom:-20%;width:30%;left:0;transform:translateX(-150%) skewX(-20deg);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.95),transparent)}
+#intro.play .shine::before{animation:introShine 1.3s ease-in-out 1.9s forwards}
+#intro .line{position:absolute;left:50%;width:70vh;height:.25vh;margin-left:-35vh;background:linear-gradient(90deg,transparent,var(--brand),transparent);transform:scaleX(0);opacity:.9}
+#intro .line.top{top:-6vh} #intro .line.bot{bottom:-6vh}
+#intro.play .line{animation:introLine 1.4s cubic-bezier(.16,1,.3,1) 1.1s forwards}
+#intro .tag{position:absolute;top:calc(100% + 9vh);left:50%;transform:translateX(-50%);white-space:nowrap;font-size:2.4vh;font-weight:700;letter-spacing:.9em;text-transform:uppercase;color:#b9c8ff;opacity:0}
+#intro.play .tag{animation:introTag 2s ease 1.6s forwards}
+@keyframes introFade{0%{opacity:0}7%{opacity:1}88%{opacity:1}100%{opacity:0}}
+@keyframes introRing{0%{transform:scale(.2);opacity:.7}100%{transform:scale(3.2);opacity:0}}
+@keyframes introLogo{0%{opacity:0;transform:scale(.8) translateY(2vh)}18%{opacity:1;transform:scale(1) translateY(0)}100%{opacity:1;transform:scale(1.07)}}
+@keyframes introShine{to{transform:translateX(450%) skewX(-20deg)}}
+@keyframes introLine{to{transform:scaleX(1)}}
+@keyframes introTag{0%{opacity:0;letter-spacing:.9em}100%{opacity:1;letter-spacing:.45em}}
 </style>
 </head>
 <body>
@@ -191,6 +220,19 @@ footer{display:flex;align-items:stretch;height:6.6vh;margin:0 -2.6vw;background:
   <div class="tick-wrap"><div class="tick" id="tick"><span class="n">Carregando…</span></div></div>
 </footer>
 <div class="status" id="status"></div>
+
+<div id="intro" aria-hidden="true">
+  <div class="stage">
+    <i class="ring"></i><i class="ring r2"></i><i class="ring r3"></i>
+    <div class="logo-wrap">
+      <i class="line top"></i>
+      <img src="logo.png" alt="">
+      <i class="shine"></i>
+      <i class="line bot"></i>
+      <div class="tag">Playable Ads Studio</div>
+    </div>
+  </div>
+</div>
 
 <script>
 /* ---- compatibilidade com o navegador antigo do Chromecast ---- */
@@ -564,6 +606,24 @@ async function checkUpdate(){
 }
 setInterval(checkUpdate, 3*60*1000);
 setTimeout(() => reloadFresh(BUILD), 6*3600*1000); // evita acúmulo de memória ligado o dia todo
+
+/* ---- vinheta da logo: às :00, :15, :30 e :45 de cada hora ---- */
+const VINHETA_MIN = 15, VINHETA_SEG = 8;
+function playIntro(){
+  const el = $("intro");
+  el.classList.remove("play"); void el.offsetWidth; // reinicia as animações
+  el.classList.add("play");
+  setTimeout(() => el.classList.remove("play"), VINHETA_SEG*1000 + 200);
+}
+function scheduleIntro(){
+  const now = new Date();
+  const next = new Date(now);
+  next.setSeconds(0, 0);
+  next.setMinutes(Math.floor(now.getMinutes()/VINHETA_MIN)*VINHETA_MIN + VINHETA_MIN);
+  setTimeout(() => { playIntro(); scheduleIntro(); }, next - now);
+}
+scheduleIntro();
+if (/[?&]vinheta=1/.test(location.search)) setTimeout(playIntro, 1500); // ?vinheta=1 para testar
 </script>
 </body>
 </html>
